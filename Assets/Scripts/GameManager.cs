@@ -1,181 +1,180 @@
-using NUnit.Framework;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
-using UnityEngine.UIElements;
 
-public class GameManager : MonoBehaviour
+public class GameManager 
 {
-    public Piece[] pieces;
-    public VisualManager visualManager;
-    public enum Team
-    {
-        Black,
-        White
-    };
+    public int[] board;
 
-    public enum PieceType
+    public const int None = 0;
+    public const int King = 1;
+    public const int Pawn = 2;
+    public const int Knight = 3;
+    public const int Bishop = 4;
+    public const int Rook = 5;
+    public const int Queen = 6;
+
+    public const int White = 8;
+    public const int Black = 16;
+
+    public int turn = White;
+
+    public GameManager()
     {
-        Pawn,
-        Bishop,
-        Knight,
-        Rook,
-        Queen,
-        King
+        board = new int[64];
+
+        board[0] = White | Rook;        board[56] = Black | Rook;
+        board[1] = White | Knight;      board[57] = Black | Knight;
+        board[2] = White | Bishop;      board[58] = Black | Bishop;
+        board[3] = White | Queen;       board[59] = Black | Queen;
+        board[4] = White | King;        board[60] = Black | King;
+        board[5] = White | Bishop;      board[61] = Black | Bishop;
+        board[6] = White | Knight;      board[62] = Black | Knight;
+        board[7] = White | Rook;        board[63] = Black | Rook;
+        board[8] = White | Pawn;        board[55] = Black | Pawn;
+        board[9] = White | Pawn;        board[55] = Black | Pawn;
+        board[10] = White | Pawn;       board[55] = Black | Pawn;
+        board[11] = White | Pawn;       board[55] = Black | Pawn;
+        board[12] = White | Pawn;       board[55] = Black | Pawn;
+        board[13] = White | Pawn;       board[55] = Black | Pawn;
+        board[14] = White | Pawn;       board[55] = Black | Pawn;
+        board[15] = White | Pawn;       board[55] = Black | Pawn;
     }
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    
+    public bool isLegalMove(int pieceLocation, int targetLocation)
     {
-
+        List<int> legalMoves = giveLegalMoves(pieceLocation);
+        return legalMoves.Any(move => move == targetLocation);
     }
 
-    // Update is called once per frame
-    void Update()
+    public List<int> giveLegalMoves(int pieceLocation)
     {
+        if (board[pieceLocation] == 0) return null;
 
-    }
-
-    public bool isLegalMove(Piece piece, Vector3 position)
-    {
-        List<Vector3> legalMoves = giveLegalMoves(piece);
-        return legalMoves.Any(move => move.x == position.x && move.y == position.y);
-    }
-
-    public List<Vector3> giveLegalMoves(Piece piece)
-    {
-        List<Vector3> legalMoves = new List<Vector3>();
-        Vector3 position = piece.gamePosition;
-        Vector3 pointer = position;
-        switch (piece.pieceType)
+        List<int> legalMoves = new List<int>();
+        int piece = board[pieceLocation];
+        switch (piece & 7)
         {
-            case PieceType.Pawn:
-                if (piece.team == Team.White)
+            case 2:
+                if ((piece & 24) == White)
                 {
-                    legalMoves.Add(new Vector3(position.x, position.y + 1, 0));
+                    legalMoves.Add(pieceLocation + 8);
                 }
                 else
                 {
-                    legalMoves.Add(new Vector3(position.x, position.y - 1, 0));
+                    legalMoves.Add(pieceLocation - 8);
                 }
                 break;
-            case PieceType.Bishop:
-                addDiagonalsToList(legalMoves, position);
+            case 4:
+                addDiagonalsToList(legalMoves, pieceLocation);
                 break;
-            case PieceType.Knight:
-                if (GameManager.isInBoard(position.x + 2, position.y + 1)) legalMoves.Add(new Vector3(position.x + 2, position.y + 1));
-                if (GameManager.isInBoard(position.x + 1, position.y + 2)) legalMoves.Add(new Vector3(position.x + 1, position.y + 2));
+            case 3:
+                if (pieceLocation + 15 <= 63) legalMoves.Add(pieceLocation + 15);
+                if (pieceLocation + 6 <= 63) legalMoves.Add(pieceLocation + 6);
+                if (pieceLocation + 17 <= 63) legalMoves.Add(pieceLocation + 17);
+                if (pieceLocation + 10 <= 63) legalMoves.Add(pieceLocation + 10);
 
-                if (GameManager.isInBoard(position.x + 2, position.y - 1)) legalMoves.Add(new Vector3(position.x + 2, position.y - 1));
-                if (GameManager.isInBoard(position.x + 1, position.y - 2)) legalMoves.Add(new Vector3(position.x + 1, position.y - 2));
+                if (pieceLocation - 15 >= 0) legalMoves.Add(pieceLocation - 15);
+                if (pieceLocation - 6 >= 0) legalMoves.Add(pieceLocation - 6);
+                if (pieceLocation - 17 >= 0) legalMoves.Add(pieceLocation - 17);
+                if (pieceLocation - 10 >= 0) legalMoves.Add(pieceLocation - 10);
 
-                if (GameManager.isInBoard(position.x - 2, position.y - 1)) legalMoves.Add(new Vector3(position.x - 2, position.y - 1));
-                if (GameManager.isInBoard(position.x - 1, position.y - 2)) legalMoves.Add(new Vector3(position.x - 1, position.y - 2));
-
-                if (GameManager.isInBoard(position.x - 2, position.y + 1)) legalMoves.Add(new Vector3(position.x - 2, position.y + 1));
-                if (GameManager.isInBoard(position.x - 1, position.y + 2)) legalMoves.Add(new Vector3(position.x - 1, position.y + 2));
                 break;
-            case PieceType.Rook:
-                addCardinalsToList(legalMoves, position);
+            case 5:
+                addCardinalsToList(legalMoves, pieceLocation);
                 break;
-            case PieceType.Queen:
-                addCardinalsToList(legalMoves, position);
-                addDiagonalsToList(legalMoves, position);
+            case 6:
+                addCardinalsToList(legalMoves, pieceLocation);
+                addDiagonalsToList(legalMoves, pieceLocation);
                 break;
-            case PieceType.King:
-                if (GameManager.isInBoard(position.x, position.y + 1)) legalMoves.Add(new Vector3(position.x, position.y + 1));
-                if (GameManager.isInBoard(position.x, position.y - 1)) legalMoves.Add(new Vector3(position.x, position.y - 1));
-                if (GameManager.isInBoard(position.x - 1, position.y)) legalMoves.Add(new Vector3(position.x - 1, position.y));
-                if (GameManager.isInBoard(position.x + 1, position.y)) legalMoves.Add(new Vector3(position.x + 1, position.y));
-                if (GameManager.isInBoard(position.x - 1, position.y + 1)) legalMoves.Add(new Vector3(position.x - 1, position.y + 1));
-                if (GameManager.isInBoard(position.x + 1, position.y + 1)) legalMoves.Add(new Vector3(position.x + 1, position.y + 1));
-                if (GameManager.isInBoard(position.x - 1, position.y - 1)) legalMoves.Add(new Vector3(position.x - 1, position.y - 1));
-                if (GameManager.isInBoard(position.x + 1, position.y - 1)) legalMoves.Add(new Vector3(position.x + 1, position.y - 1));
+            case 1:
+                if (pieceLocation + 7 <= 63) legalMoves.Add(pieceLocation + 7);
+                if (pieceLocation + 8 <= 63) legalMoves.Add(pieceLocation + 8);
+                if (pieceLocation + 9 <= 63) legalMoves.Add(pieceLocation + 9);
+                if (pieceLocation + 1 <= 63) legalMoves.Add(pieceLocation + 1);
+                if (pieceLocation - 7 >= 0) legalMoves.Add(pieceLocation - 7);
+                if (pieceLocation - 8 >= 0) legalMoves.Add(pieceLocation - 8);
+                if (pieceLocation - 9 >= 0) legalMoves.Add(pieceLocation - 9);
+                if (pieceLocation - 1 >= 0) legalMoves.Add(pieceLocation - 1);
                 break;
         }
         return legalMoves;
     }
 
-    public void showHighlights(Piece piece)
-    {
-        visualManager.showHighlight(giveLegalMoves(piece), piece.team);
-    }
+    //public void showHighlights(Piece piece)
+    //{
+    //    visualManager.showHighlight(giveLegalMoves(piece), piece.team);
+    //}
 
-    public void hideHighlights()
-    {
-        visualManager.hideHighlight();
-    }
+    //public void hideHighlights()
+    //{
+    //    visualManager.hideHighlight();
+    //}
 
-    private void addDiagonalsToList(List<Vector3> list, Vector3 position)
+    private void addDiagonalsToList(List<int> legalMoves, int position)
     {
-        Vector3 pointer = position;
-        while (GameManager.isInBoard(pointer.x + 1, pointer.y + 1)) //northeast
+        int pointer = position + 7; //northwest
+        while (pointer >= 0 && pointer <= 63)
         {
-            pointer.x++; pointer.y++;
-            list.Add(pointer);
+            legalMoves.Add(pointer);
+            pointer += 7;
         }
-        pointer = position;
-        while (GameManager.isInBoard(pointer.x + 1, pointer.y - 1)) //southeast
+        pointer = position + 9; //northeast
+        while (pointer >= 0 && pointer <= 63)
         {
-            pointer.x++; pointer.y--;
-            list.Add(pointer);
+            legalMoves.Add(pointer);
+            pointer += 9;
         }
-        pointer = position;
-        while (GameManager.isInBoard(pointer.x - 1, pointer.y - 1)) //southwest
+        pointer = position - 7; //southeast
+        while (pointer >= 0 && pointer <= 63)
         {
-            pointer.x--; pointer.y--;
-            list.Add(pointer);
+            legalMoves.Add(pointer);
+            pointer -= 7;
         }
-        pointer = position;
-        while (GameManager.isInBoard(pointer.x - 1, pointer.y + 1)) //northwest
+        pointer = position - 9; //southwest
+        while (pointer >= 0 && pointer <= 63)
         {
-            pointer.x--; pointer.y++;
-            list.Add(pointer);
-        }
-    }
-
-    private void addCardinalsToList(List<Vector3> list, Vector3 position)
-    {
-        Vector3 pointer = position;
-        while (GameManager.isInBoard(pointer.x, pointer.y + 1)) //north
-        {
-            pointer.y++;
-            list.Add(pointer);
-        }
-        pointer = position;
-        while (GameManager.isInBoard(pointer.x + 1, pointer.y)) //east
-        {
-            pointer.x++;
-            list.Add(pointer);
-        }
-        pointer = position;
-        while (GameManager.isInBoard(pointer.x, pointer.y - 1)) //south
-        {
-            pointer.y--;
-            list.Add(pointer);
-        }
-        pointer = position;
-        while (GameManager.isInBoard(pointer.x - 1, pointer.y)) //west
-        {
-            pointer.x--;
-            list.Add(pointer);
+            legalMoves.Add(pointer);
+            pointer -= 9;
         }
     }
 
-    private static bool isInBoard(float x, float y)
+    private void addCardinalsToList(List<int> legalMoves, int position)
     {
-        return x >= 0 && x < 8 && y >= 0 && y < 8;
+        int pointer = position + 8;
+        while (pointer <= 63) //north
+        {
+            legalMoves.Add(pointer);
+            pointer += 8;
+        }
+        pointer = position + 1;
+        while (pointer <= 63 && pointer % 8 != 0) //north
+        {
+            legalMoves.Add(pointer);
+            pointer += 1;
+        }
+        pointer = position - 8;
+        while (pointer >= 0) //north
+        {
+            legalMoves.Add(pointer);
+            pointer -= 8;
+        }
+        pointer = position - 1;
+        while (pointer >= 0 && pointer % 8 != 7) //north
+        {
+            legalMoves.Add(pointer);
+            pointer -= 1;
+        }
     }
 
-    public Piece returnPresentPiece(Vector3 pos, Team team) {
-        for (int i = 0; i < pieces.Length; i++)
-        {
-            if (pieces[i].transform.position == pos && pieces[i].team != team)
-            {
-                return pieces[i];
-            }
-        }
+    public int flipTurn()
+    {
+        turn = turn == White ? Black : White;
+        return turn;
+    }
 
-        return null;
+    public int getTurn()
+    {
+        return turn;
     }
 }

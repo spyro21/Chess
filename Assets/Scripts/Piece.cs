@@ -1,20 +1,36 @@
 using System;
-using UnityEditorInternal;
 using UnityEngine;
 
 
 public class Piece : MonoBehaviour
 {
-    public GameManager gameManager;
+    public enum Team
+    {
+        White,
+        Black
+    }
+
+    public enum PieceType
+    {
+        King,
+        Pawn,
+        Knight,
+        Bishop,
+        Rook,
+        Queen
+    }
+
     public VisualManager visualManager;
 
-    public GameManager.PieceType pieceType;
+    public PieceType pieceType;
     public bool showMoves = false;
-    public GameManager.Team team;
+    public Team team;
 
     private bool isMoving = false;
     private Vector3 offset;
     public Vector3 gamePosition;
+
+    
 
     private void Start()
     {
@@ -31,11 +47,11 @@ public class Piece : MonoBehaviour
         dropOffPos.z = 0;
 
         //check if valid move with GameManager
-        if(gameManager.isLegalMove(this, dropOffPos))
+        if(visualManager.isLegalMove(this, dropOffPos))
         {
             transform.position = dropOffPos;
             gamePosition = dropOffPos;
-            gameManager.hideHighlights();
+            visualManager.hideHighlight();
         }
         else
         {
@@ -53,12 +69,12 @@ public class Piece : MonoBehaviour
     private void OnMouseEnter()
     {
         showMoves = true;
-        gameManager.showHighlights(this);
+        visualManager.highlightLegalMoves(this);
     }
 
     private void OnMouseExit()
     {
-        gameManager.hideHighlights();
+        visualManager.hideHighlight();
     }
 
     private void Update()
